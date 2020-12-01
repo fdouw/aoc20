@@ -1,0 +1,22 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 1: Report Repair
+
+with open('input/day01', 'r') as f:
+    nums = [int(l) for l in f]
+nums.sort()  # sorts in place
+
+for n in nums:
+    if 2020 - n in nums:
+        print("Part 1: {}".format(n * (2020 - n)))
+        break
+
+for i in range(len(nums)):
+    for j in range(i + 1, len(nums)):
+        if nums[i] + nums[j] >= 2020:
+            break
+        if 2020 - nums[i] - nums[j] in nums[j + 1:]:
+            print("Part 2: {}".format(
+                nums[i] * nums[j] * (2020 - nums[i] - nums[j])))
