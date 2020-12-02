@@ -1,0 +1,14 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 2: Password Philosophy
+
+import re
+
+with open('input/day02', 'r') as f:
+    data = [[int(d[0]), int(d[1]), d[3].count(d[2]), d[2], d[3]]
+            for d in (re.split(r':? |-', l) for l in f)]
+    print(f'Part 1: {len([d for d in data if d[2] <= d[1] and d[2] >= d[0]])}')
+    print(
+        f'Part 2: {len([d for d in data if bool(d[4][d[0]-1] == d[3]) ^ bool(d[4][d[1]-1] == d[3])])}')
