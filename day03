@@ -7,8 +7,15 @@
 with open('input/day03', 'r') as f:
     data = f.readlines()
 
-treecount = 0
-for i, line in enumerate(data):
-    if line[3 * i % len(line.strip())] == '#':
-        treecount += 1
-print(f'Part 1: {treecount}')
+
+def count_trees(right, down):
+    treecount = 0
+    for i in range(0, len(data), down):
+        if data[i][right * i % len(data[i].strip())] == '#':
+            treecount += 1
+    return treecount
+
+
+print(f'Part 1: {count_trees(3,1)}')
+
+print(f'Part 2: {count_trees(1,1) * count_trees(3,1) * count_trees(5,1) * count_trees(7,1) * count_trees(1,2)}')
