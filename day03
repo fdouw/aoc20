@@ -1,0 +1,14 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 3: Toboggan Trajectory
+
+with open('input/day03', 'r') as f:
+    data = f.readlines()
+
+treecount = 0
+for i, line in enumerate(data):
+    if line[3 * i % len(line.strip())] == '#':
+        treecount += 1
+print(f'Part 1: {treecount}')
