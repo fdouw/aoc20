@@ -1,0 +1,22 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 4: Passport Processing
+
+import re
+
+with open('input/day04', 'r') as f:
+    passportdata = re.split(r'\n\s*\n', f.read().strip())
+
+keyref = set(['byr', 'iyr', 'eyr', 'hgt', 'hcl', 'ecl', 'pid', 'cid'])
+count = 0
+for entry in passportdata:
+    passport = set([d.split(':')[0] for d in re.split(r'\s+', entry)])
+    if passport.issubset(keyref):
+        if passport.issuperset(keyref):
+            count += 1
+        elif passport.symmetric_difference(keyref).issubset(['cid']):
+            count += 1
+
+print(f'Part 1: {count}')
