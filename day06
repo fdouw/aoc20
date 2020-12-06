@@ -1,0 +1,14 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 6: Custom Customs
+
+with open('input/day06', 'r') as f:
+    count = sum([len(set(g) - set('\n')) for g in f.read().split('\n\n')])
+    print(f'Part 1: {count}')
+
+with open('input/day06', 'r') as f:
+    cnt = sum(len(set.intersection(*[set(ans) for ans in grp.splitlines()]) - set('\n'))
+              for grp in f.read().split('\n\n'))
+    print(f'Part 2: {cnt}')
