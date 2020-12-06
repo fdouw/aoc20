@@ -12,3 +12,12 @@ with open('input/day06', 'r') as f:
     cnt = sum(len(set.intersection(*[set(ans) for ans in grp.splitlines()]) - set('\n'))
               for grp in f.read().split('\n\n'))
     print(f'Part 2: {cnt}')
+
+# Alternative:
+
+from functools import reduce
+
+with open('input/day06', 'r') as f:
+    data = f.read().split('\n\n')
+    print(f'Part 1: {sum(len(reduce(lambda x,y:x|y, map(set,par.splitlines()))) for par in data)}')
+    print(f'Part 2: {sum(len(reduce(lambda x,y:x&y, map(set,par.splitlines()))) for par in data)}')
