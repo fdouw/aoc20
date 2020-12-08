@@ -1,0 +1,24 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 8: Handheld Halting
+
+with open('input/day08', 'r') as f:
+    code = [(op, int(n)) for op, n in (line.split(' ') for line in f)]
+
+    accumulator = 0
+    index = 0
+    visited = set()
+    while index not in visited:
+        visited.add(index)
+        if code[index][0] == 'acc':
+            accumulator += code[index][1]
+            index += 1
+        elif code[index][0] == 'jmp':
+            index += code[index][1]
+        elif code[index][0] == 'nop':
+            index += 1
+        else:
+            raise Exception(f'Unknown code: {code[index][0]} at index {index}')
+    print(f'Part 1: {accumulator}')
