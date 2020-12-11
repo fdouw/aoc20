@@ -4,12 +4,69 @@
 #
 # AoC 2020 Day 11: Seating System
 
+import time
+
 
 class Grid:
+
+    def see_neighbour(self, x, y, dx, dy):
+        """
+        Look from position (x,y) in the direction defined by (dx,dy).
+        Return the position of the first chair we see in this direction.
+        Return None if no chairs are visible in this direction.
+        Return None if there is no chair in the current position (x,y).
+        """
+        if self.grid[y][x] == '.' or (dx == 0 and dy == 0):   # Makes looping easier
+            return None
+        x += dx
+        y += dy
+        while 0 <= x < self.width and 0 <= y < self.height:
+            if self.grid[y][x] != '.':
+                return (x, y)
+            x += dx
+            y += dy
+        return None
+
+    def trace_neighbours(self, x, y):
+        """
+        Does raytracing to find the seats seen by (x,y). Empty places are ignored.
+        """
+        return list(filter(lambda n: n != None, (self.see_neighbour(x, y, i, j) for i in [-1, 0, 1] for j in [-1, 0, 1])))
+
     def __init__(self, input):
         self.grid = [[*(line.strip())] for line in input]
         self.width = len(self.grid[0])  # Assume rectangle
         self.height = len(self.grid)
+        self.neighbours = {}
+        for y in range(self.height):
+            for x in range(self.width):
+                self.neighbours[(x, y)] = self.trace_neighbours(x, y)
+
+    def is_occupied(self, p):
+        """
+        Expects a tuple p = (x,y).
+        Returns True if this place is occupied, False if it is empty or outside the grid.
+        """
+        return 0 <= p[0] < self.width and 0 <= p[1] < self.height and self.grid[p[1]][p[0]] == '#'
+
+    def update2_trace(self):
+        """
+        Update the grid using the rules in part 2.
+        This time using the cached neigbours.
+        """
+        tmp = [row.copy() for row in self.grid]
+        changed = False
+        for y in range(self.height):
+            for x in range(self.width):
+                count = sum(self.is_occupied(p) for p in self.neighbours[(x, y)])
+                if self.grid[y][x] == '#' and count >= 5:
+                    tmp[y][x] = 'L'
+                    changed = True
+                elif self.grid[y][x] == 'L' and count == 0:
+                    tmp[y][x] = '#'
+                    changed = True
+        self.grid = tmp
+        return changed
 
     def see_occupant(self, x, y, dx, dy):
         """
@@ -31,6 +88,9 @@ class Grid:
         return False
 
     def update2(self):
+        """
+        Update the grid using the rules in part 2.
+        """
         tmp = [row.copy() for row in self.grid]
         changed = False
         for y in range(self.height):
@@ -90,10 +150,9 @@ def update(grid):
     return changed, tmp
 
 
-with open('input/day11') as f:
+with open('input/day11', 'r') as f:
     grid = [[*(line.strip())] for line in f]
     changed = True
-    bla = 0
     while changed:
         changed, grid = update(grid)
     count = 0
@@ -101,8 +160,21 @@ with open('input/day11') as f:
         count += grid[y].count('#')
     print(f'Part 1: {count}')
 
-with open('input/day11') as f:
+with open('input/day11', 'r') as f:
+    start = time.perf_counter()
     grid = Grid(f.readlines())
     while grid.update2():
         pass
     print(f'Part 2: {grid.count_occupants()}')
+    middle = time.perf_counter()
+
+with open('input/day11', 'r') as f:
+    grid = Grid(f.readlines())
+    while grid.update2_trace():
+        pass
+    print(f'Part 2: {grid.count_occupants()}')
+    end = time.perf_counter()
+
+print(f'First:  {middle - start:.3}s')
+print(f'Second: {end - middle:.3}s')
+print(f'Diff: {(middle-start) - (end - middle):.3}s')
