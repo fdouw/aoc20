@@ -79,11 +79,10 @@ class Grid:
         changed = False
         for y in range(self.height):
             for x in range(self.width):
-                count = sum(self.is_occupied(p) for p in self.neighbours[(x, y)])
-                if self.grid[y][x] == '#' and count >= 5:
+                if self.grid[y][x] == '#' and sum(self.is_occupied(p) for p in self.neighbours[(x, y)]) >= 5:
                     tmp[y][x] = 'L'
                     changed = True
-                elif self.grid[y][x] == 'L' and count == 0:
+                elif self.grid[y][x] == 'L' and self.is_available2_trace(x, y):
                     tmp[y][x] = '#'
                     changed = True
         self.grid = tmp
@@ -136,11 +135,12 @@ class Grid:
         changed = False
         for y in range(self.height):
             for x in range(self.width):
-                count = sum(self.is_occupied((x + i, y + j)) for i in [-1, 0, 1] for j in [-1, 0, 1])
-                if self.grid[y][x] == '#' and count >= 5:   # >= 5, because we also count (x,y)
+                if self.grid[y][x] == '#' and 5 <= sum(
+                        self.is_occupied((x + i, y + j)) for i in [-1, 0, 1] for j in [-1, 0, 1]):
+                    # >= 5, because we also count (x,y)
                     tmp[y][x] = 'L'
                     changed = True
-                elif self.grid[y][x] == 'L' and count == 0:
+                elif self.grid[y][x] == 'L' and self.is_available(x, y):
                     tmp[y][x] = '#'
                     changed = True
                 else:
