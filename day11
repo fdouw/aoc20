@@ -50,6 +50,20 @@ class Grid:
         """
         return 0 <= p[0] < self.width and 0 <= p[1] < self.height and self.grid[p[1]][p[0]] == '#'
 
+    def is_available(self, x, y):
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                if self.is_occupied((x+i, y+j)):
+                    return False
+        return True
+
+    def is_available2(self, x, y):
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                if self.see_occupant(x, y, i, j):
+                    return False
+        return True
+
     def is_available2_trace(self, x, y):
         for p in self.neighbours[(x, y)]:
             if self.is_occupied(p):
