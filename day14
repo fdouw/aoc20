@@ -1,0 +1,66 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 14: Docking Data
+
+import numpy as np
+import re
+
+
+def generate_indices(mask):
+    buffer = [mask]
+    while len(buffer) > 0:
+        current = buffer.pop()
+        if current.find('X') == -1:
+            yield int(current, 2)
+        else:
+            buffer.append(current.replace('X', '0', 1))
+            buffer.append(current.replace('X', '1', 1))
+
+
+mask_pattern = re.compile(r'^mask = (?P<mask>.{36})$')
+mem_pattern = re.compile(r'^mem\[(?P<index>\d+)\] = (?P<value>\d+)$')
+
+with open('input/day14', 'r') as f:
+    mask = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    mem = {}
+    value_bitmask = int(mask.replace('1', '0').replace('X', '1'), 2)
+    value_fixed = int(mask.replace('X', '0'), 2)
+    task_array = []
+    for line in f:
+        if (match := mask_pattern.match(line)):
+            mask = match.groupdict()['mask']
+            value_bitmask = int(mask.replace('1', '0').replace('X', '1'), 2)    # Select only X (1s from value)
+            value_fixed = int(mask.replace('X', '0'), 2)    # Select not X (1s from mask)
+        elif (match := mem_pattern.match(line)):
+            value = int(match.groupdict()['value'])
+            index = int(match.groupdict()['index'])
+            mem[index] = value_fixed + np.bitwise_and(value, value_bitmask)
+            # task_array is for part 2
+            task_array.append({'mask': mask,
+                               'index': index,
+                               'value': value})
+    print(f'Part 1: {sum(mem.values())}')
+
+    # Only the last write to a memory address will matter.
+    # Traverse the list of commands in reverse and only write unwritten addresses.
+    written = set()  # Set of addresses that have been written
+    total = 0  # Don't write memory, only keep the sum
+    last_mask = '@@@'
+    mask_ones_cache = []
+    for task in reversed(task_array):
+        if task['mask'] != last_mask:
+            # mask has changed, compute the new one and store in cache
+            index_bitmask = np.ulonglong(np.invert(np.ulonglong(int(task['mask'].replace('X', '1'), 2))))
+            mask_ones_cache = [*generate_indices(task['mask'])]
+            last_mask = task['mask']
+        # Select the 1s that are set by index,
+        # Combine with the 1s that are set by mask
+        index_ones = np.bitwise_and(np.uint(task['index']), np.uint(index_bitmask))
+        for mask_ones in mask_ones_cache:
+            address = index_ones | mask_ones
+            if address not in written:
+                total += task['value']
+                written.add(address)
+    print(f'Part 2: {total}')
