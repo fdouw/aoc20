@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 16: Ticket Translation
+
+import re
+
+
+def clear_index_from_column(columns, name, index):
+    if len(columns[name]) > 1:
+        columns[name].remove(index)
+        if len(columns[name]) == 1:
+            print(f'columns[{name}] = {columns[name]}')
+            j = columns[name][0]
+            for cn in columns:
+                if cn != name and j in columns[cn]:
+                    clear_index_from_column(columns, cn, j)
+
+
+rule_pattern = re.compile(r'([a-z ]+): (\d+)-(\d+) or (\d+)-(\d+)')
+
+with open('input/day16', 'r') as f:
+    # Part 0: Read rules and ticket data
+    rawinput = f.read().split('\n\n')
+
+    rules = {}
+    for match in rule_pattern.finditer(rawinput[0]):
+        name, a, b, c, d = match.groups()
+        rules[name] = set.union(set(range(int(a), int(b))), range(int(c), int(d)))
+    all_fields = set.union(*rules.values())
+
+    myticket = [int(n) for n in rawinput[1].splitlines()[1].split(',')]
+
+    nearbytickets = [
+        [int(n) for n in line.split(',')] for line in rawinput[2].splitlines()[1:]
+    ]
+
+    # Part 1: compute checksum
+    checksum = sum(num for ticket in nearbytickets for num in ticket if num not in all_fields)
+    print(f'Part 1: {checksum}')
+
+    # Part 2
+    # Filter out invalid tickets
+    for ticket in nearbytickets:
+        for num in ticket:
+            if num not in all_fields:
+                nearbytickets.remove(ticket)
+
+    # columns = [set(ticket[i] for ticket in nearbytickets) for i in range(len(myticket))]
+    # colnames = []
+    # for i in range(len(myticket)):
+    #     columns[i].add(myticket[i])
+    #     colnames.append([name for name in rules if columns[i].issubset(rules[name]) and name.startswith('departure')])
+    #     print(f'col[{i:2}] = {colnames[i]}')
+
+    # Match colums
+    ncols = len(myticket)
+    columns = {name: [*range(ncols)] for name in rules}
+    for ticket in nearbytickets:  # inc. myticket?
+        for i, n in enumerate(ticket):
+            for name in columns:
+                if n not in rules[name] and i in columns[name]:
+                    clear_index_from_column(columns, name, i)
+
+    # Collect data from myticket
+    total = 1
+    for name in columns:
+        if name.startswith('departure'):
+            total *= myticket[columns[name][0]]
+
+    print(f'Part 2: {total}')
