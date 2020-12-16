@@ -11,7 +11,6 @@ def clear_index_from_column(columns, name, index):
     if len(columns[name]) > 1:
         columns[name].remove(index)
         if len(columns[name]) == 1:
-            print(f'columns[{name}] = {columns[name]}')
             j = columns[name][0]
             for cn in columns:
                 if cn != name and j in columns[cn]:
@@ -27,7 +26,7 @@ with open('input/day16', 'r') as f:
     rules = {}
     for match in rule_pattern.finditer(rawinput[0]):
         name, a, b, c, d = match.groups()
-        rules[name] = set.union(set(range(int(a), int(b))), range(int(c), int(d)))
+        rules[name] = set.union(set(range(int(a), int(b)+1)), range(int(c), int(d)+1))
     all_fields = set.union(*rules.values())
 
     myticket = [int(n) for n in rawinput[1].splitlines()[1].split(',')]
@@ -42,30 +41,27 @@ with open('input/day16', 'r') as f:
 
     # Part 2
     # Filter out invalid tickets
+    # Create a copy: if you remove items from the list you're iterating over, you will skip some items
+    # Some consecutive tickets are invalid and you would miss the second one
+    valid_tickets = nearbytickets.copy()
     for ticket in nearbytickets:
         for num in ticket:
             if num not in all_fields:
-                nearbytickets.remove(ticket)
-
-    # columns = [set(ticket[i] for ticket in nearbytickets) for i in range(len(myticket))]
-    # colnames = []
-    # for i in range(len(myticket)):
-    #     columns[i].add(myticket[i])
-    #     colnames.append([name for name in rules if columns[i].issubset(rules[name]) and name.startswith('departure')])
-    #     print(f'col[{i:2}] = {colnames[i]}')
+                valid_tickets.remove(ticket)
 
     # Match colums
     ncols = len(myticket)
     columns = {name: [*range(ncols)] for name in rules}
-    for ticket in nearbytickets:  # inc. myticket?
-        for i, n in enumerate(ticket):
+    for ticket in valid_tickets:  # inc. myticket?
+        for col_index, num in enumerate(ticket):
             for name in columns:
-                if n not in rules[name] and i in columns[name]:
-                    clear_index_from_column(columns, name, i)
+                if num not in rules[name] and col_index in columns[name]:
+                    clear_index_from_column(columns, name, col_index)
 
     # Collect data from myticket
     total = 1
     for name in columns:
+        # print(f'columns[{name}] = {columns[name]}')
         if name.startswith('departure'):
             total *= myticket[columns[name][0]]
 
