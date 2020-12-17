@@ -1,0 +1,58 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 17: Conway Cubes
+
+from collections import defaultdict
+
+
+with open('input/day17', 'r') as f:
+    grid = set((x, y, 0) for y, line in enumerate(f.readlines()) for x, value in enumerate(line) if value == '#')
+    tmpgrid = set()
+    init_height = sorted(grid, key=lambda s: s[1])[-1][1] + 1
+    init_width = sorted(grid, key=lambda s: s[0])[-1][0] + 1
+
+    for cycle in range(1, 7):
+        counts = defaultdict(lambda: 0)
+        for x, y, z in grid:
+            for i in range(x - 1, x + 2):
+                for j in range(y - 1, y + 2):
+                    for k in range(z - 1, z + 2):
+                        counts[(i, j, k)] += 1
+        for cell, neighbours in counts.items():
+            if cell in grid and 3 <= neighbours <= 4:  # The cell itself is also counted
+                tmpgrid.add(cell)
+            if cell not in grid and neighbours == 3:
+                tmpgrid.add(cell)
+        grid = tmpgrid
+        tmpgrid = set()
+
+    print(f'Part 1: {len(grid)}')
+
+
+with open('input/day17', 'r') as f:
+    grid = set((x, y, 0, 0) for y, line in enumerate(f.readlines()) for x, value in enumerate(line) if value == '#')
+    tmpgrid = set()
+    init_height = sorted(grid, key=lambda s: s[1])[-1][1] + 1
+    init_width = sorted(grid, key=lambda s: s[0])[-1][0] + 1
+
+    for cycle in range(1, 7):
+        counts = defaultdict(lambda: 0)
+        for x, y, z, w in grid:
+            for i in range(x - 1, x + 2):
+                for j in range(y - 1, y + 2):
+                    for k in range(z - 1, z + 2):
+                        for l in range(w-1, w+2):
+                            counts[(i, j, k, l)] += 1
+        for cell, neighbours in counts.items():
+            if cell in grid and 3 <= neighbours <= 4:  # The cell itself is also counted
+                tmpgrid.add(cell)
+            if cell not in grid and neighbours == 3:
+                tmpgrid.add(cell)
+        grid = tmpgrid
+        tmpgrid = set()
+
+    print(f'Part 2: {len(grid)}')
+
+# Probably faster if I don't iterate all possible coordinates, but only the ones that are active.
