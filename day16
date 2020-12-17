@@ -43,11 +43,7 @@ with open('input/day16', 'r') as f:
     # Filter out invalid tickets
     # Create a copy: if you remove items from the list you're iterating over, you will skip some items
     # Some consecutive tickets are invalid and you would miss the second one
-    valid_tickets = nearbytickets.copy()
-    for ticket in nearbytickets:
-        for num in ticket:
-            if num not in all_fields:
-                valid_tickets.remove(ticket)
+    valid_tickets = [ticket for ticket in nearbytickets if all(num in all_fields for num in ticket)]
 
     # Match colums
     ncols = len(myticket)
@@ -61,7 +57,6 @@ with open('input/day16', 'r') as f:
     # Collect data from myticket
     total = 1
     for name in columns:
-        # print(f'columns[{name}] = {columns[name]}')
         if name.startswith('departure'):
             total *= myticket[columns[name][0]]
 
