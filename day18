@@ -1,0 +1,77 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 18: Operation Order
+
+from collections import deque
+import re
+
+
+class Expression:
+    def __init__(self):
+        self.right = None
+
+    def value(self):
+        return self.right.value()   # Hacky way to make parsing easier
+
+
+class Num:
+    def __init__(self, n):
+        self.num = n
+
+    def value(self):
+        return self.num
+
+
+class Operator:
+    def __init__(self, op, left=None, right=None):
+        self.operator = op
+        self.left = left
+        self.right = right
+
+    def value(self):
+        if self.operator == '+':
+            return self.left.value() + self.right.value()
+        elif self.operator == '*':
+            return self.left.value() * self.right.value()
+        raise ArithmeticError(f'Unknown operator: {self.operator}')
+
+
+def generate_tree(tokens):
+    """
+    Param tokens: a deque of tokens (either a number, '+', '*', '(', or ')')
+    """
+    expression = Expression()
+    while len(tokens) > 0:
+        token = tokens.popleft()
+        if type(token) is int:
+            if type(expression) == Expression:
+                expression = Num(token)
+            else:
+                # Assumes that expression is an Operator
+                expression.right = Num(token)
+        elif token in ('+', '*'):
+            expression = Operator(token, left=expression)
+        elif token == '(':
+            if type(expression) == Expression:
+                expression = generate_tree(tokens)
+            else:
+                # Assumes that expression is an Operator
+                expression.right = generate_tree(tokens)
+        elif token == ')':
+            # Closing subexpression, return result to caller
+            return expression
+    # Finished parsing
+    return expression
+
+
+tokenise_pattern = re.compile(r'(\d+|[()*+])')
+
+with open('input/day18', 'r') as f:
+    total = 0
+    for line in f:
+        tokens = deque(int(t) if t.isnumeric() else t for t in map(lambda s: s.groups()[0], tokenise_pattern.finditer(line)))
+        expr = generate_tree(tokens)
+        total += expr.value()
+    print(f'Part 1: {total}')
