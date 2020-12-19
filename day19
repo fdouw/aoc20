@@ -23,7 +23,7 @@ def compile_rule(id, limit=32):
     if type(rule) is str:
         return rule
     else:
-        return f"({'|'.join(''.join(compile_rule(id, limit-1) for id in sub) for sub in rule)})"
+        return f"(?:{'|'.join(''.join(compile_rule(id, limit-1) for id in sub) for sub in rule)})"
 
 
 rules = {}
