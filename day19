@@ -7,9 +7,6 @@
 import re
 
 
-rules = {}
-
-
 def addrule(id, expression):
     if re.match(r'"[a-z]"$', expression):
         rules[id] = expression[1]
@@ -17,22 +14,38 @@ def addrule(id, expression):
         rules[id] = [sub.strip().split(' ') for sub in expression.split('|')]
 
 
-def compile_rule(id):
+def compile_rule(id, limit=32):
+    # Return empty string if we recurse too much.
+    if limit == 0:
+        return ''
+
     rule = rules[id]
     if type(rule) is str:
         return rule
     else:
-        return f"({'|'.join(''.join(compile_rule(id) for id in sub) for sub in rule)})"
+        return f"({'|'.join(''.join(compile_rule(id, limit-1) for id in sub) for sub in rule)})"
 
 
+rules = {}
 with open('input/day19', 'r') as f:
     data = f.read().split('\n\n')
     for ruledef in data[0].splitlines():
         if m := re.match(r'(\d+): (.+)', ruledef):
             addrule(*m.groups())
+
     rule_nil = re.compile(f'^{compile_rule("0")}$')
     count = 0
     for message in data[1].splitlines():
         if rule_nil.match(message):
             count += 1
     print(f'Part 1: {count}')
+
+    # Simply add the new rules; bail out of the infinite loop with a hardcoded limit in compile_rule()
+    addrule('8', '42 | 42 8')
+    addrule('11', '42 31 | 42 11 31')
+    rule_nil = re.compile(f'^{compile_rule("0")}$')
+    count = 0
+    for message in data[1].splitlines():
+        if rule_nil.match(message):
+            count += 1
+    print(f'Part 2: {count}')
