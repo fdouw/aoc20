@@ -1,0 +1,46 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 20: Jurassic Jigsaw
+
+import math
+
+
+def tohash(array, reverse=False):
+    if reverse:
+        array = list(array)
+        array.reverse()  # not nice for the caller
+    return int(''.join(map(str, array)), 2)
+
+
+class Tile:
+
+    def __init__(self, data):
+        self.id = int(data[0][5:9])  # Assume it's always the form 'Tile \d{4}:'
+        grid = [[int(c == '#') for c in line] for line in data[1:]]
+        # Create hashes by converting the pattern on each side into a binary number, always left-to-right, top-to-bottom.
+        self.sides = {}
+        self.sides['top'] = tohash(grid[0])
+        self.sides['top_r'] = tohash(grid[0], reverse=True)
+        self.sides['right'] = tohash(map(lambda l: l[-1], grid))
+        self.sides['right_r'] = tohash(map(lambda l: l[-1], grid), reverse=True)
+        self.sides['bottom'] = tohash(grid[-1])
+        self.sides['bottom_r'] = tohash(grid[-1], reverse=True)
+        self.sides['left'] = tohash(map(lambda l: l[0], grid))
+        self.sides['left_r'] = tohash(map(lambda l: l[0], grid), reverse=True)
+
+    def countMatchingSides(self, alltiles):
+        counts = {'top': 0, 'right': 0, 'bottom': 0, 'left': 0}
+        for tile in alltiles:
+            if tile != self:
+                for side in self.sides:
+                    if self.sides[side] in tile.sides.values():
+                        counts[side.split('_')[0]] += 1
+        return list(counts.values()).count(0)
+
+
+with open('input/day20', 'r') as f:
+    tiles = [Tile(t.splitlines()) for t in f.read().strip().split('\n\n')]
+    corners = [tile.id for tile in tiles if tile.countMatchingSides(tiles) == 2]
+    print(f'Part 1: {math.prod(corners)}')
