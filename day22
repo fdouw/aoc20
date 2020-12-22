@@ -1,0 +1,148 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 22: Crab Combat
+
+from collections import deque
+
+
+class Game:
+    gamehist = {}
+
+    def __init__(self, player1, player2, base, game=1):
+        """
+        Creates a new game.
+        Param playerN: deck of player N in the original game.
+        Param base: largest number + 1, used to hash game state.
+        """
+        self.q1 = player1  # .copy()
+        self.q2 = player2  # .copy()
+        self.hist1 = {}
+        self.hist2 = {}
+        self.hist = set()
+        self.game = game
+        self.base = base
+        # See if we have played this game before
+        self.gamehash = (self.hashdeck(q1), self.hashdeck(q2))
+
+    def hashdeck(self, q):
+        total = 0
+        for c in range(1, len(q)+1):
+            item = q.popleft()
+            q.append(item)
+            total += c * item
+        return total
+
+    def copydeck(self, q, n):
+        """Copies the first n items from q."""
+        tmp = q.copy()
+        return deque(reversed([tmp.pop() for _ in range(n)]))
+
+    def play(self):
+        # print(f'\n=== Game {self.game} ===')
+        round = 1
+
+        # First check if we have played this game before
+        if self.gamehash in Game.gamehist:
+            print('Use hashed result')
+            return Game.gamehist[self.gamehash]
+        elif tuple(reversed(self.gamehash)) in Game.gamehist:
+            return 3 - Game.gamehist[self.gamehash]
+
+        # Stupid hack: if p1 has the highest card, they will win
+        if self.game > 1 and max(self.q1) > max(self.q2):
+            print('Take a shortcut')
+            return 1
+
+        while len(self.q1) > 0 and len(self.q2) > 0:
+            print(f'\n-- Round {round} (Game {self.game}) --')
+            # print(f'Player 1\'s deck: {list(reversed(self.q1))}')
+            # print(f'Player 2\'s deck: {list(reversed(self.q2))}')
+            hash1 = self.hashdeck(self.q1)
+            hash2 = self.hashdeck(self.q2)
+            # if hash1 in self.hist1 and hash2 in self.hist2 and self.hist1[hash1] == self.hist2[hash2]:
+            if (hash1, hash2) in self.hist:
+                # We have been here before, player 1 wins the game
+                # print(f'Player 1 wins round {round} of game {self.game}!\n')
+                # print(f'Player 1 wins the game by default (repeated game state)')
+                Game.gamehist[self.gamehash] = 1
+                return 1
+            else:
+                self.hist1[hash1] = round
+                self.hist2[hash2] = round
+                self.hist.add((hash1, hash2))
+
+                card1 = self.q1.pop()
+                card2 = self.q2.pop()
+                # print(f'Player 1 plays: {card1}')
+                # print(f'Player 2 plays: {card2}')
+                if len(self.q1) >= card1 and len(self.q2) >= card2:
+                    # Play subgame
+                    # print('Playing a sub-game to determine the winner...')
+                    subgame = Game(self.copydeck(self.q1, card1), self.copydeck(self.q2, card2), self.base, self.game+1)
+                    winner = subgame.play()
+                else:
+                    # Regular game
+                    winner = 1 if card1 > card2 else 2
+
+                # Cards go to winner
+                # print(f'Player {winner} wins round {round} of game {self.game}!')
+                if winner == 1:
+                    self.q1.appendleft(card1)
+                    self.q1.appendleft(card2)
+                else:
+                    self.q2.appendleft(card2)
+                    self.q2.appendleft(card1)
+
+            # On to the next round
+            round += 1
+
+        # If one player's hand is empty, the other wins
+        # print(f'The winner of game {self.game} is player {winner}!')
+        if len(self.q1) == 0:
+            Game.gamehist[self.gamehash] = 2
+            return 2
+        elif len(self.q2) == 0:
+            Game.gamehist[self.gamehash] = 1
+            return 1
+
+        raise Exception('No winner, but game ends!')
+
+
+with open('input/day22', 'r') as f:
+    data = f.read().split('\n\n')
+    q1 = deque(map(int, reversed(data[0].splitlines()[1:])))
+    q2 = deque(map(int, reversed(data[1].splitlines()[1:])))
+
+    while len(q1) > 0 and len(q2) > 0:
+        a = q1.pop()
+        b = q2.pop()
+        if a > b:
+            q1.appendleft(a)
+            q1.appendleft(b)
+        else:
+            q2.appendleft(b)
+            q2.appendleft(a)
+
+    q = q1 if len(q2) == 0 else q2
+    c = 1
+    total = 0
+    while len(q) > 0:
+        total += c * q.popleft()
+        c += 1
+
+    print(f'Part 1: {total}')
+
+    q1 = deque(map(int, reversed(data[0].splitlines()[1:])))
+    q2 = deque(map(int, reversed(data[1].splitlines()[1:])))
+    base = max(max(q1), max(q2)) + 1
+    maingame = Game(q1, q2, base)
+    winner = maingame.play()
+    print('\n\n')
+    print(f'Player {winner} wins!')
+    q = maingame.q1 if winner == 1 else maingame.q2
+    result = maingame.hashdeck(q)
+    print(f'Part 2: {result}')
+    print(f'Player 1\'s deck: {maingame.q1}')
+    print(f'Player 2\'s deck: {maingame.q2}')
