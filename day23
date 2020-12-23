@@ -7,40 +7,52 @@
 import sys
 from collections import deque
 
-input = '467528193'  # Breaks at rounds = 19, official input
-# input = '528193467'  # Breaks at rounds = 8
+input = '467528193'
+# rounds = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isnumeric() else 100
 
-rounds = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isnumeric() else 10
-print(f'Rounds: {rounds}')
+
+def play(cups, rounds):
+    offset = len(cups) - 1  # Used to rotate item to the rightmost position
+    offset_short = offset - 3  # Idem, but when 3 items are removed
+    for _ in range(rounds):
+        # Select the current cup and move it out of the way to pop the removed cups
+        current = cups[0]
+        cups.rotate(-1)
+        removed = (cups.popleft(), cups.popleft(), cups.popleft())
+
+        # Adjust destination for the removed cups
+        destination = current - 1 if current > 1 else upperbound
+        while destination in removed:
+            destination -= 1
+            if destination < lowerbound:
+                destination = upperbound
+
+        # Find the destination
+        cups.rotate(offset_short - cups.index(destination))
+        cups.extend(removed)
+
+        # Rotate so the next current cup is at cups[0], ie current is in cups[-1]
+        cups.rotate(offset - cups.index(current))
+    return cups
+
 
 cups = deque(map(int, input))
 lowerbound = min(cups)
 upperbound = max(cups)
 
-for _ in range(rounds):
-    # Select the current cup and move it out of the way to pop the removed cups
-    current = cups[0]
-    cups.rotate(-1)
-    removed = (cups.popleft(), cups.popleft(), cups.popleft())
-
-    # Adjust destination for the removed cups
-    destination = current - 1 if current > 1 else upperbound
-    while destination in removed:
-        destination -= 1
-        if destination < lowerbound:
-            destination = upperbound
-
-    # Find the destination
-    while cups[-1] != destination:
-        cups.rotate(-1)
-    cups.extend(removed)
-
-    # Rotate so the next current cup is at cups[0], ie current is in cups[-1]
-    cups.rotate(8-cups.index(current))
-
 # Find 1 and remove
+cups = play(cups, 100)
 cups.rotate(-cups.index(1))
 cups.popleft()
 
 result = ''.join(map(str, cups))
 print(f'Part 1: {result}')
+
+
+cups = deque(map(int, input))
+lowerbound = min(cups)
+upperbound = max(cups)
+cups.extend(range(upperbound + 1, 1000001))
+upperbound = 1000000
+
+cups = play(cups, 100)
