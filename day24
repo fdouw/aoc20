@@ -1,0 +1,54 @@
+#!/usr/bin/python
+# Floris Douw
+# 2020
+#
+# AoC 2020 Day 24: Lobby Layout
+
+from collections import defaultdict
+import re
+
+direction_pattern = re.compile(r'(e|se|sw|w|nw|ne)')
+
+with open('input/day24', 'r') as f:
+    directions = [direction_pattern.findall(line) for line in f]
+    black_tiles = set()
+    # If the grid were square, we could simply count the n,w,s,e; now we need to step through the process.
+    for line in directions:
+        x, y = 0, 0
+        for d in line:
+            if d == 'e':
+                x += 1
+            elif d == 'se':
+                x += 1
+                y += 1
+            elif d == 'sw':
+                y += 1
+            elif d == 'w':
+                x -= 1
+            elif d == 'nw':
+                x -= 1
+                y -= 1
+            elif d == 'ne':
+                y -= 1
+        if (x, y) in black_tiles:
+            black_tiles.remove((x, y))
+        else:
+            black_tiles.add((x, y))
+    print(f'Part 1: {len(black_tiles)}')
+
+    # Each day, count the neighbours for each tile, then decide to flip based on neighbour count and current colour.
+    # As on day 17, only use the currently black tiles to count neighbours.
+    rounds = 100
+    for _ in range(rounds):
+        nb_counts = defaultdict(lambda: 0)
+        for tile in black_tiles:
+            for dx, dy in ((-1, -1), (-1, 0), (0, -1), (1, 0), (0, 1), (1, 1)):
+                nb_counts[(tile[0]+dx, tile[1]+dy)] += 1
+        new_tiles = set()
+        for tile, count in nb_counts.items():
+            if tile in black_tiles and 0 < count <= 2:
+                new_tiles.add(tile)
+            elif tile not in black_tiles and count == 2:
+                new_tiles.add(tile)
+        black_tiles = new_tiles
+    print(f'Part 2: {len(black_tiles)}')
