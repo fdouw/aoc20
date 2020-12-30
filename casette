@@ -1,0 +1,22 @@
+#!/usr/bin/python
+# Floris Douw
+#
+# Extra for AoC 2020
+# https://csokavar.hu/projects/casette/
+# https://old.reddit.com/r/adventofcode/comments/kmzuc8/one_extra_puzzle_to_end_this_year/
+
+import numpy as np
+
+with open('input/casette', 'r') as f:
+    digits = []
+    for line in f.readlines():
+        data = [int(d) for d in line.split(',')]
+        coefs = np.fft.rfft(data)
+        freqs = np.fft.rfftfreq(len(coefs))
+        index = np.argmax(np.abs(coefs))
+        frequency = freqs[index] * (len(data) * 125)  # 4ms samples, but *250 gives double the frequencies?
+        digits.append(int(-.5 + frequency / 1000))  # rounding down ?
+    chars = []
+    for i in range(1, len(digits), 8):
+        chars.append(chr(int(''.join(map(str, digits[i:i + 5])), 3)))
+    print(''.join(chars))
